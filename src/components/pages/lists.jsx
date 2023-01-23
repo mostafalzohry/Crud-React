@@ -10,7 +10,6 @@ import {
   Col,
 } from "antd";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 import { getPosts } from "../../redux/features/postsReducer";
@@ -60,13 +59,10 @@ const EditableCell = ({
 
 const Lists = () => {
   const history = useNavigate();
+
   const dispatch = useDispatch();
   const allData = useSelector((state) => state.posts.data);
-
   const loading = useSelector((state) => state.posts.loading);
-
-  console.log(allData);
-  
   const oldData = [];
   const [form] = Form.useForm();
   const [data, setData] = useState(oldData);
@@ -78,7 +74,7 @@ const Lists = () => {
 
   allData.map((user) => {
     oldData.push({
-      key: user.id.toString(),
+      key: user.id,
       userId: user.userId,
       title: user.title,
       body: user.body,
@@ -131,6 +127,7 @@ const Lists = () => {
     const newData = data.filter((item) => item.key !== key);
     setData(newData);
   };
+
   const columns = [
     {
       key: 1,
@@ -204,6 +201,7 @@ const Lists = () => {
         ) : null,
     },
   ];
+
   const mergedColumns = columns.map((col) => {
     if (!col.editable) {
       return col;
@@ -223,6 +221,7 @@ const Lists = () => {
   const handleClick = (id) => {
     history("/form");
   };
+
   return (
     <div>
       <Row gutter={[40, 0]}>
