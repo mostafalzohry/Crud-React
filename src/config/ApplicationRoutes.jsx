@@ -16,7 +16,7 @@ const ApplicationRoutes = () => {
   useEffect(() => {
     window.innerWidth <= 760 ? setCollapse(true) : setCollapse(false);
   }, []);
-  const handleToggle = (event: any) => {
+  const handleToggle = (event) => {
     event.preventDefault();
     collapse ? setCollapse(false) : setCollapse(true);
   };
