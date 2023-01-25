@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice , current } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, current } from "@reduxjs/toolkit";
 import axios from "axios";
 
 export const getPosts = createAsyncThunk("posts/fetchPosts", async () => {
@@ -13,6 +13,17 @@ export const addNewPost = createAsyncThunk(
   async (value) => {
     return await axios
       .post(`https://jsonplaceholder.typicode.com/posts`, value)
+      .then((res) => {
+        return res.data;
+      });
+  }
+);
+
+export const updatePosts = createAsyncThunk(
+  "posts/updatePosts",
+  async (value) => {
+    return await axios
+      .put(`https://jsonplaceholder.typicode.com/posts/${value.id}`, value)
       .then((res) => {
         return res.data;
       });
@@ -59,7 +70,19 @@ export const postsSlice = createSlice({
     [addNewPost.rejected]: (state, action) => {
       state.error = "error";
     },
-
+    [updatePosts.fulfilled]: (state, action) => {
+      const row = action.payload;
+      const newData = [...current(state).data];
+      const index = newData.findIndex((item) => action.payload.id === item.id);
+      if (index > -1) {
+        const item = newData[index];
+        newData.splice(index, 1, {
+          ...item,
+          ...row,
+        });
+      }
+      state.data = newData;
+    },
     [deletePosts.fulfilled]: (state, action) => {
       const newPosts = current(state).data.filter(
         (post) => post.id !== action.payload

@@ -5,18 +5,19 @@ import App from './App';
 import {store} from "./redux/app/store"
 import { Provider } from 'react-redux';
 import { ApiProvider } from '@reduxjs/toolkit/dist/query/react'
-import { ApiSlice } from './redux/features/Apislice';
+import { getPosts } from './redux/features/postsReducer';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+store.dispatch(getPosts())
 root.render(
   <React.StrictMode>
-    <ApiProvider api={ApiSlice}>
+ 
     <Provider store={store} >
     <App />
     </Provider>
-    </ApiProvider >
+   
   </React.StrictMode>
 );
 

@@ -12,10 +12,9 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
-import { getPosts } from "../../redux/features/postsReducer";
-import { updatePosts ,deletePosts} from '../../redux/features/postsReducer';
+import { updatePosts, deletePosts } from "../../redux/features/postsReducer";
 
-const { TextArea } = Input;
+const { TextArea, Search } = Input;
 const { Title } = Typography;
 
 const EditableCell = ({
@@ -59,50 +58,74 @@ const EditableCell = ({
 };
 
 const Lists = () => {
-  const history =useNavigate();
-  const dispatch =useDispatch()
-  const allData = useSelector(state =>state?.posts?.data)
-  const loading = useSelector(state =>state.posts.loading)
-  
+  const history = useNavigate();
+  const dispatch = useDispatch();
+  const allData = useSelector((state) => state?.posts?.data);
+  const loading = useSelector((state) => state.posts.loading);
+
   const [searchVal, setSearchVal] = useState(null);
-  
+
   const [form] = Form.useForm();
-    const [editingKey, setEditingKey] = useState("");
-    const [filteredData, setFilteredData] = useState([]);
-    const [searchIndex, setSearchIndex] = useState([]);
-  
-    
-    useEffect(() => {
-      const crawl = (post, allValues) => {
-        if (!allValues) allValues = [];
-        for (var key in post) {
-          if (typeof post[key] === "object") crawl(post[key], allValues);
-          else allValues.push(post[key] + " ");
-        }
-        return allValues;
-      };
-        setFilteredData(allData);
-        const searchInd = allData.map(post => {
-          const allValues = crawl(post);
-          return { allValues: allValues.toString() };
-        });
-        setSearchIndex(searchInd);
-    }, [allData]);
-  
-  const isEditing = (record) => record.key === editingKey;
+  const [editingKey, setEditingKey] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+  const [searchIndex, setSearchIndex] = useState([]);
+
+  useEffect(() => {
+    const crawl = (post, allValues) => {
+      if (!allValues) allValues = [];
+      for (var key in post) {
+        if (typeof post[key] === "object") crawl(post[key], allValues);
+        else allValues.push(post[key] + " ");
+      }
+      return allValues;
+    };
+    setFilteredData(allData);
+    const searchInd = allData.map((post) => {
+      const allValues = crawl(post);
+      return { allValues: allValues.toString() };
+    });
+    setSearchIndex(searchInd);
+  }, [allData]);
+
+  useEffect(() => {
+    if (searchVal) {
+      const reqData = searchIndex.map((post, index) => {
+        if (post.allValues.toLowerCase().indexOf(searchVal.toLowerCase()) >= 0)
+          return allData[index];
+        return null;
+      });
+      setFilteredData(
+        reqData.filter((post) => {
+          if (post) return true;
+          return false;
+        })
+      );
+    } else setFilteredData(allData);
+  }, [searchVal, searchIndex]);
+
+  const isEditing = (record) => record.id === editingKey;
   const edit = (record) => {
     form.setFieldsValue({
-      name: "",
-      age: "",
-      address: "",
+      userId: "",
+      title: "",
+      body: "",
       ...record,
     });
-    setEditingKey(record.key);
+    setEditingKey(record.id);
   };
   const cancel = () => {
     setEditingKey("");
   };
 
+  const save = async (id) => {
+    try {
+      const row = await form.validateFields();
+      dispatch(updatePosts({ ...row, id }));
+      setEditingKey("");
+    } catch (errInfo) {
+      console.log("Validate Failed:", errInfo);
+    }
+  };
 
   const columns = [
     {
@@ -133,10 +156,7 @@ const Lists = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <Popconfirm
-              title="Sure to save?"
-              // onConfirm={() => save(record.key)}
-            >
+            <Popconfirm title="Sure to save?" onConfirm={() => save(record.id)}>
               <Button type="primary">save</Button>
             </Popconfirm>
             <Typography.Link
@@ -201,6 +221,19 @@ const Lists = () => {
   return (
     <div>
       <Row gutter={[40, 0]}>
+        <Col span={10}>
+          <Search
+            onChange={(e) => setSearchVal(e.target.value)}
+            placeholder="Search"
+            enterButton
+            style={{
+              position: "sticky",
+              top: "0",
+              left: "0",
+              width: "300px",
+            }}
+          />
+        </Col>
         <Col span={18}>
           <Title level={2}>Post List</Title>
         </Col>
