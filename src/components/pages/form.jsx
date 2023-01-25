@@ -1,120 +1,96 @@
-import React, { useState, useEffect } from "react";
-import { Row, Col, Typography, Input, Form, Button, message } from "antd";
-import { useNavigate } from "react-router";
-import {
-  useGetPostsQuery,
-  useAddNewPostMutation,
-} from "../../redux/features/Apislice";
+import {useState} from 'react';
+import {Row, Col, Typography, Input, Form, Button,  message} from 'antd';
+import {useNavigate} from 'react-router';
+import {useDispatch} from "react-redux"
+import { addNewPost} from '../../redux/features/postsReducer';
 
+const {Title} = Typography;
+const layout = {
+  labelCol: { span: 8 },
+  wrapperCol: { span: 16 },
+};
 const FormApp = () => {
-  const { Title } = Typography;
-  const layout = {
-    labelCol: { span: 8 },
-    wrapperCol: { span: 16 },
-  };
-
-  const [title, settitle] = useState("");
-  console.log(title);
-
-  const [post, setpost] = useState("");
-  console.log(post);
-
-  const [addNewPost, response] = useAddNewPostMutation();
-  const [postForm, setPostForm] = useState("Submit");
-
+  const dispatch =useDispatch();
   const [loading, setLoading] = useState(false);
+
   const history = useNavigate();
+const handleSubmit =  async (values) => {
+  setLoading(true);
+    try {
+       dispatch(addNewPost(values))
+      setLoading(false);
 
-  const handleSubmit = (values) => {
-    setLoading(true);
-    console.log([values]);
-    fetch("https://jsonplaceholder.typicode.com/posts", {
-      method: "POST",
-      body: JSON.stringify({
-        title: values.Title,
-        body: values.body,
-        userId: values.userId,
-      }),
-      headers: {
-        "Content-type": "application/json; charset=UTF-8",
-      },
-    })
-      .then((response) => {
-        response.json();
+      message.success('posts Added Successfully!');
+      history('/list');
+  
+    }
+      catch (error) {
         setLoading(false);
-        message.success("posts Added Successfully!");
-        history("/list");
-      })
-      .then((json) => console.log(json));
-  };
-
-  return (
+        message.error(error);
+      }
+    
+  }
+return (
     <div>
-      <Row gutter={[40, 0]}>
-        <Col span={23}>
-          <Title style={{ textAlign: "center" }} level={2}>
+        <Row gutter={[40, 0]}>
+          <Col span={23}>
+            <Title style={{textAlign: 'center'}} level={2}>
             Please Fill the post Form
-          </Title>
-        </Col>
-      </Row>
-      <Row gutter={[40, 0]}>
+            </Title>
+            </Col>
+        </Row>
+        <Row gutter={[40, 0]}>
         <Col span={18}>
           <Form {...layout} onFinish={handleSubmit}>
-            <Form.Item
-              name="userId"
-              label="UserId"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input your id",
-                },
-              ]}
+            <Form.Item name="userId" label="UserId"
+            rules={[
+              {
+                required: true,
+                message: 'Please input number of id',
+              }
+            ]}
             >
               <Input placeholder="Please Enter your userID" />
             </Form.Item>
-            <Form.Item
-              name="Title"
-              label="Title"
-              rules={[
-                {
-                  required: true,
-                  message: "Please input your Title",
-                },
-              ]}
+            <Form.Item name="title" label="title" 
+            rules={[
+              {
+                required: true,
+                message: 'Please input your Title',
+              }
+            ]}
             >
-              <Input
-                placeholder="Please Enter your title"
-                onChange={(e) => settitle(e.target.value)}
-              />
+              <Input placeholder="Please Enter your title" />
             </Form.Item>
-            <Form.Item
-              name="body"
-              label="Body"
-              rules={[
-                {
-                  required: true,
-                  message: "Please select your post",
-                },
-              ]}
+            <Form.Item name="body" label="Body" 
+            rules={[
+              {
+                required: true,
+                message: 'Please select your post',
+              }
+            ]}
             >
-              <Input
-                placeholder="Please Enter your post"
-                onChange={(e) => setpost(e.target.value)}
-              />
-            </Form.Item>
+            <Input placeholder="Please Enter your post" />
 
-            <div style={{ textAlign: "right" }}>
-              <Button type="primary" loading={loading} htmlType="submit">
-                Save
-              </Button>{" "}
-              <Button htmlType="button" onClick={() => history("/list")}>
-                Back
-              </Button>
-            </div>
+            </Form.Item>
+            
+           
+            
+             
+            <div style={{textAlign: "right"}}>
+            <Button type="primary" loading={loading} htmlType="submit">
+              Save
+            </Button>{' '}
+            <Button  htmlType="button" onClick={(e) => {
+                  e.preventDefault() 
+              history('/list')}}>
+              Back
+            </Button>
+              </div>
           </Form>
-        </Col>
-      </Row>
+          </Col>
+        </Row>
     </div>
   );
-};
+}
 export default FormApp;

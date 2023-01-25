@@ -8,6 +8,17 @@ export const getPosts = createAsyncThunk("posts/fetchPosts", async () => {
   return data;
 });
 
+export const addNewPost = createAsyncThunk(
+  "posts/addNewPost",
+  async (value) => {
+    return await axios
+      .post(`https://jsonplaceholder.typicode.com/posts`, value)
+      .then((res) => {
+        return res.data;
+      });
+  }
+);
+
 const initialState = {
   loading: false,
   data: [],
@@ -30,6 +41,13 @@ export const postsSlice = createSlice({
       state.loading = false;
       state.error = "error";
     },
+    [addNewPost.fulfilled]: (state, action) => {
+      state.data = [...state.data, action.payload];
+    },
+    [addNewPost.rejected]: (state, action) => {
+      state.error = "error";
+    },
+   
   },
 });
 
