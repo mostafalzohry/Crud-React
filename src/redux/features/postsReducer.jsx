@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice , current } from "@reduxjs/toolkit";
 import axios from "axios";
 
 export const getPosts = createAsyncThunk("posts/fetchPosts", async () => {
@@ -18,6 +18,18 @@ export const addNewPost = createAsyncThunk(
       });
   }
 );
+
+export const deletePosts = createAsyncThunk("posts/deletePosts", async (id) => {
+  try {
+    const response = await axios.delete(
+      `https://jsonplaceholder.typicode.com/posts/${id}`
+    );
+    if (response?.status === 200) return id;
+    return `${response.status} : ${response.statusText}`;
+  } catch (error) {
+    return error.message;
+  }
+});
 
 const initialState = {
   loading: false,
@@ -47,7 +59,13 @@ export const postsSlice = createSlice({
     [addNewPost.rejected]: (state, action) => {
       state.error = "error";
     },
-   
+
+    [deletePosts.fulfilled]: (state, action) => {
+      const newPosts = current(state).data.filter(
+        (post) => post.id !== action.payload
+      );
+      state.data = newPosts;
+    },
   },
 });
 

@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 import { getPosts } from "../../redux/features/postsReducer";
+import { updatePosts ,deletePosts} from '../../redux/features/postsReducer';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -58,34 +59,36 @@ const EditableCell = ({
 };
 
 const Lists = () => {
-  const history = useNavigate();
-
-  const dispatch = useDispatch();
-  const allData = useSelector((state) => state.posts.data);
-  const loading = useSelector((state) => state.posts.loading);
-  const oldData = [];
+  const history =useNavigate();
+  const dispatch =useDispatch()
+  const allData = useSelector(state =>state?.posts?.data)
+  const loading = useSelector(state =>state.posts.loading)
+  
+  const [searchVal, setSearchVal] = useState(null);
+  
   const [form] = Form.useForm();
-  const [data, setData] = useState(oldData);
-  const [editingKey, setEditingKey] = useState("");
-
-  useEffect(() => {
-    dispatch(getPosts());
-  }, []);
-
-  allData.map((user) => {
-    oldData.push({
-      key: user.id,
-      userId: user.userId,
-      title: user.title,
-      body: user.body,
-    });
-    return oldData;
-  });
-
-  useEffect(() => {
-    setData(oldData);
-  }, [allData]);
-
+    const [editingKey, setEditingKey] = useState("");
+    const [filteredData, setFilteredData] = useState([]);
+    const [searchIndex, setSearchIndex] = useState([]);
+  
+    
+    useEffect(() => {
+      const crawl = (post, allValues) => {
+        if (!allValues) allValues = [];
+        for (var key in post) {
+          if (typeof post[key] === "object") crawl(post[key], allValues);
+          else allValues.push(post[key] + " ");
+        }
+        return allValues;
+      };
+        setFilteredData(allData);
+        const searchInd = allData.map(post => {
+          const allValues = crawl(post);
+          return { allValues: allValues.toString() };
+        });
+        setSearchIndex(searchInd);
+    }, [allData]);
+  
   const isEditing = (record) => record.key === editingKey;
   const edit = (record) => {
     form.setFieldsValue({
@@ -100,33 +103,6 @@ const Lists = () => {
     setEditingKey("");
   };
 
-  const save = async (key) => {
-    try {
-      const row = await form.validateFields();
-      const newData = [...data];
-      const index = newData.findIndex((item) => key === item.key);
-      if (index > -1) {
-        const item = newData[index];
-        newData.splice(index, 1, {
-          ...item,
-          ...row,
-        });
-        setData(newData);
-        setEditingKey("");
-      } else {
-        newData.push(row);
-        setData(newData);
-        setEditingKey("");
-      }
-    } catch (errInfo) {
-      console.log("Validate Failed:", errInfo);
-    }
-  };
-
-  const handleDelete = (key) => {
-    const newData = data.filter((item) => item.key !== key);
-    setData(newData);
-  };
 
   const columns = [
     {
@@ -159,7 +135,7 @@ const Lists = () => {
           <span>
             <Popconfirm
               title="Sure to save?"
-              onConfirm={() => save(record.key)}
+              // onConfirm={() => save(record.key)}
             >
               <Button type="primary">save</Button>
             </Popconfirm>
@@ -189,10 +165,10 @@ const Lists = () => {
       title: "delete",
       dataIndex: "delete",
       render: (_, record) =>
-        data.length >= 1 ? (
+        allData.length >= 1 ? (
           <Popconfirm
             title="Sure to delete?"
-            onConfirm={() => handleDelete(record.key)}
+            onConfirm={() => dispatch(deletePosts(record.id))}
           >
             <Button type="primary" danger>
               delete
@@ -244,7 +220,7 @@ const Lists = () => {
                 },
               }}
               bordered
-              dataSource={data}
+              dataSource={filteredData}
               columns={mergedColumns}
               rowClassName="editable-row"
               pagination={{
